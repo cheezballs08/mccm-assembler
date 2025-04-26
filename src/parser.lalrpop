@@ -1,4 +1,5 @@
 use crate::token::*;
+use either::Either::*;
 
 grammar;
 
@@ -25,6 +26,27 @@ pub Register: Register = {
 
 pub IntLiteral: IntLiteral = {
   r"[0-9]+" => IntLiteral::from(usize::from_str_radix(<>, 10).unwrap())
+}
+
+
+pub Op: Op = {
+  <opcode:Opcode> <in_reg_left:Register> Comma <in_reg_right:Register> Arrow <out_reg:Register> SemiColon => {
+    Op {
+      opcode: opcode,
+      offset: 0,
+      mem_flag: MemFlag::No,
+      self_flag: SelfFlag::No,
+      imm_flag: ImmFlag {
+        arg1: false,
+        arg2: false,
+        out: false,
+      },
+      width_flag: WidthFlag::One,
+      arg1: Some(Right(in_reg_left)),
+      arg2: Some(Right(in_reg_right)),
+      out_reg: Some(Right(out_reg)),
+    }
+  }
 }
 
 

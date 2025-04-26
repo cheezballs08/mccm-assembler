@@ -19,11 +19,11 @@ fn main() {
   /*let args = Args::parse();
   let _file = std::fs::read_to_string(args.filename).unwrap();*/
 
-  let reg = "R1";
+  let line = "mov r0, r1 -> r0;";
 
-  let reg_parser = parser::RegisterParser::new();
+  let op_parser = parser::OpParser::new();
 
-  let result = reg_parser.parse(reg);
+  let result = op_parser.parse(line);
 
-  println!("{:?}", result);
+  println!("{:#?}", result);
 }

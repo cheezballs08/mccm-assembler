@@ -88,9 +88,9 @@ impl MachineEncodable for SelfFlag {
 
 #[derive(Debug)]
 pub struct ImmFlag {
-  arg1: bool,
-  arg2: bool,
-  out: bool,
+  pub arg1: bool,
+  pub arg2: bool,
+  pub out: bool,
 }
 
 impl MachineEncodable for ImmFlag {
