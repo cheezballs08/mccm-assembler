@@ -1,11 +1,13 @@
-use std::path::PathBuf;
-
-use clap::Parser;
-#[allow(dead_code)]
+#![allow(dead_code)]
 use lalrpop_util::lalrpop_mod;
-lalrpop_mod!(pub parser);
 
-pub mod token;
+mod token;
+lalrpop_mod!( parser);
+
+use std::path::PathBuf;
+use clap::Parser;
+
+
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -16,14 +18,19 @@ struct Args {
 
 
 fn main() {
-  /*let args = Args::parse();
-  let _file = std::fs::read_to_string(args.filename).unwrap();*/
+  let args = Args::parse();
 
-  let line = "mov r0, r1 -> r0;";
+  let file = std::fs::read_to_string(args.filename).unwrap();
 
-  let op_parser = parser::OpParser::new();
+  let lines = file.lines();
 
-  let result = op_parser.parse(line);
+  let line_parser = parser::LineParser::new();
 
-  println!("{:#?}", result);
+  let mut parsed_lines = Vec::new();
+
+  for line in lines {
+    parsed_lines.push(line_parser.parse(line));
+  }
+
+  println!("{:#?}", parsed_lines)
 }

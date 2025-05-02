@@ -1,29 +1,114 @@
 use either::Either;
-use bitfield::*;
 
 pub trait MachineEncodable {
   fn encode(&self) -> Vec<u8>;
 }
 
-
-#[derive(Debug)]
-pub enum Opcode {
-  Mov
+#[derive(Debug, PartialEq)]
+pub enum Width {
+  W64,
+  W32,
+  W16,
+  W8,
 }
 
-impl MachineEncodable for Opcode {
+impl MachineEncodable for Width {
   fn encode(&self) -> Vec<u8> {
     match self {
-      Opcode::Mov => vec![0x00],
+      Width::W64 => vec![0b00000000],
+      Width::W32 => vec![0b00000000],
+      Width::W16 => vec![0b00000000],
+      Width::W8 => vec![0b00000000],
     }
   }
 }
 
+#[derive(Debug, PartialEq)]
+pub enum ImmFlag {
+  NoImmediate,
+  SingleImmediate(Width),
+  DoubleImmediate(Width),
+}
 
-#[derive(Debug)]
+impl MachineEncodable for ImmFlag {
+  fn encode(&self) -> Vec<u8> {
+    match self {
+      ImmFlag::NoImmediate => vec![0b00000000],
+      ImmFlag::SingleImmediate(width) => vec![0b00000000 | width.encode()[0]],
+      ImmFlag::DoubleImmediate(width) => vec![0b00000000 | width.encode()[0]],
+    }
+  }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum OpCode {
+  Mov(ImmFlag),
+  JmpEq(ImmFlag),
+}
+
+impl MachineEncodable for OpCode {
+  fn encode(&self) -> Vec<u8> {
+    match self {
+        OpCode::Mov(imm_flag) => match imm_flag {
+
+            // Opcode Bit field is [Opcode, CounterOffset, Flags]
+
+            // For no immediate, the arguments are [Register(W8) -> Register(W8)], which makes the output 3 + 2 = 5 bytes.
+            ImmFlag::NoImmediate => vec![0x00, 0x00, 0x00],
+
+            // For single immediate, the arguments are:
+            // [Immediate(IntLiteral) -> Register(W8)]
+            // So 3 + Width bytes, which we need to match for.
+            ImmFlag::SingleImmediate(width) => match width {
+              Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
+            },
+
+            // Mov only has a single input argument, so we need to report the error.
+            ImmFlag::DoubleImmediate(_) => panic!("Opcode (Mov) cannot have a double immediate"),
+          }
+          OpCode::JmpEq(imm_flag) => match imm_flag {
+            ImmFlag::NoImmediate => vec![0x00, 0x00, 0x00],
+
+            ImmFlag::SingleImmediate(width) => match width {
+              Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
+            },
+
+            ImmFlag::DoubleImmediate(width) => match width{
+              Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
+            },
+
+          }
+        }
+  }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Register {
   R0,
   R1,
+  R2,
+  R3,
+  R4,
+  R5,
+  R6,
+  R7,
+  R8,
+  R9,
+  R10,
+  R11,
+  R12,
+  R13,
+  R14,
+  R15,
 }
 
 impl MachineEncodable for Register {
@@ -31,177 +116,90 @@ impl MachineEncodable for Register {
     match self {
       Register::R0 => vec![0x00],
       Register::R1 => vec![0x00],
+      Register::R2 => vec![0x00],
+      Register::R3 => vec![0x00],
+      Register::R4 => vec![0x00],
+      Register::R5 => vec![0x00],
+      Register::R6 => vec![0x00],
+      Register::R7 => vec![0x00],
+      Register::R8 => vec![0x00],
+      Register::R9 => vec![0x00],
+      Register::R10 => vec![0x00],
+      Register::R11 => vec![0x00],
+      Register::R12 => vec![0x00],
+      Register::R13 => vec![0x00],
+      Register::R14 => vec![0x00],
+      Register::R15 => vec![0x00],
     }
   }
 }
 
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct IntLiteral {
-  value: usize,
+  value: isize,
 }
 
-impl MachineEncodable for IntLiteral {
-  fn encode(&self) -> Vec<u8> {
-    self.value.to_be_bytes().to_vec()
-  }
-}
-
-impl From<usize> for IntLiteral {
-  fn from(value: usize) -> Self {
+impl From<isize> for IntLiteral {
+  fn from(value: isize) -> Self {
     IntLiteral { value }
   }
 }
 
-
-#[derive(Debug)]
-pub enum MemFlag {
-  No,
-  Yes
-}
-
-impl MachineEncodable for MemFlag {
+impl MachineEncodable for IntLiteral {
   fn encode(&self) -> Vec<u8> {
-    match self {
-      MemFlag::No => vec![0b00000000],
-      MemFlag::Yes => vec![0b00000000],
-    }
+    // TODO: Change if the architecture is little endian down the road.
+    self.value.to_be_bytes().to_vec()
   }
 }
 
-
-#[derive(Debug)]
-pub enum SelfFlag {
-  No,
-  Yes
+#[derive(Debug, PartialEq)]
+pub struct Label {
+  pub name: String,
+  pub replace_with: String,
 }
 
-impl MachineEncodable for SelfFlag {
+#[derive(Debug, PartialEq)]
+pub struct Line {
+  pub opcode: OpCode,
+  pub arg_left: Option<Either<Register, IntLiteral>>,
+  pub arg_right: Option<Either<Register, IntLiteral>>,
+  pub arg_out: Option<Register>,
+}
+
+impl MachineEncodable for Line {
   fn encode(&self) -> Vec<u8> {
-    match self {
-      SelfFlag::No => vec![0b00000000],
-      SelfFlag::Yes => vec![0b00000000],
-    }
-  }
-}
-
-
-#[derive(Debug)]
-pub struct ImmFlag {
-  pub arg1: bool,
-  pub arg2: bool,
-  pub out: bool,
-}
-
-impl MachineEncodable for ImmFlag {
-  fn encode(&self) -> Vec<u8> {
-    let mut output = 0_u8;
-
-    output.set_bit(5, self.arg1);
-    output.set_bit(6, self.arg2);
-    output.set_bit(7, self.out);
-
-    vec![output]
-  }
-}
-
-#[derive(Debug)]
-pub enum WidthFlag {
-  One,
-  Two,
-  Four,
-  Eight,
-}
-
-impl MachineEncodable for WidthFlag {
-  fn encode(&self) -> Vec<u8> {
-    match self {
-      WidthFlag::One => vec![0b00000000],
-      WidthFlag::Two => vec![0b00000000],
-      WidthFlag::Four => vec![0b00000000],
-      WidthFlag::Eight => vec![0b00000000],
-    }
-  }
-}
-
-
-#[derive(Debug)]
-pub struct Op {
-  pub opcode: Opcode,
-  pub offset: u8,
-  pub mem_flag: MemFlag,
-  pub self_flag: SelfFlag,
-  pub imm_flag: ImmFlag,
-  pub width_flag: WidthFlag,
-  pub arg1: Option<Either<IntLiteral, Register>>,
-  pub arg2: Option<Either<IntLiteral, Register>>,
-  pub out_reg: Option<Either<IntLiteral, Register>>,
-}
-
-impl MachineEncodable for Op {
-  fn encode(&self) -> Vec<u8> {
-    let op_byte = self.opcode.encode()[0];
-    let offset_byte = self.offset;
-
-    let mem_flag_byte = self.mem_flag.encode()[0];
-    let self_flag_byte = self.self_flag.encode()[0];
-    let imm_flag_byte = self.imm_flag.encode()[0];
-    let width_flag_byte = self.width_flag.encode()[0];
-
-    let flag_byte = mem_flag_byte | self_flag_byte | imm_flag_byte | width_flag_byte;
-
-    let arg1_byte: Option<Vec<u8>> = match &self.arg1 {
-      Some(Either::Left(int)) => Some(int.encode()),
-      Some(Either::Right(reg)) => Some(reg.encode()),
-      None => None,
-    };
-
-    let arg2_byte: Option<Vec<u8>> = match &self.arg2 {
-      Some(Either::Left(int)) => Some(int.encode()),
-      Some(Either::Right(reg)) => Some(reg.encode()),
-      None => None,
-    };
-
-    let out_reg_byte: Option<Vec<u8>> = match &self.out_reg {
-      Some(Either::Left(int)) => Some(int.encode()),
-      Some(Either::Right(reg)) => Some(reg.encode()),
-      None => None,
-    };
-
     let mut output = Vec::new();
 
-    output.push(op_byte);
-    output.push(offset_byte);
-    output.push(flag_byte);
+    let opcode_bytes = self.opcode.encode();
 
-    let _ = match arg1_byte {
-      Some(mut byte) => {
-        match self.width_flag {
-          WidthFlag::One => output.append(vec![byte[0]].as_mut()),
-          WidthFlag::Two => output.append(vec![byte[0], byte[1]].as_mut()),
-          WidthFlag::Four => output.append(vec![byte[0], byte[1], byte[2], byte[3]].as_mut()),
-          WidthFlag::Eight => output.append(&mut byte),
-        }
-      },
-      None => (),
-    };
+    output.extend(opcode_bytes);
 
-    let _ = match arg2_byte {
-      Some(mut byte) => {
-        match self.width_flag {
-        WidthFlag::One => output.append(vec![byte[0]].as_mut()),
-        WidthFlag::Two => output.append(vec![byte[0], byte[1]].as_mut()),
-        WidthFlag::Four => output.append(vec![byte[0], byte[1], byte[2], byte[3]].as_mut()),
-        WidthFlag::Eight => output.append(&mut byte),
+    match &self.arg_left {
+      Some(Either::Left(register)) => {
+        output.extend(register.encode());
       }
-    },
-      None => (),
-    };
+      Some(Either::Right(literal)) => {
+        output.extend(literal.encode());
+      }
+      None => {}
+    }
 
-    let _ = match out_reg_byte {
-      Some(byte) => output.push(byte[0]),
-      None => (),
-    };
+    match &self.arg_right {
+      Some(Either::Left(register)) => {
+        output.extend(register.encode());
+      }
+      Some(Either::Right(literal)) => {
+        output.extend(literal.encode());
+      }
+      None => {}
+    }
+
+    match &self.arg_out {
+      Some(register) => {
+        output.extend(register.encode());
+      }
+      None => {}
+    }
 
     output
   }

@@ -1,12 +1,12 @@
-const ITER_COUNT = 10;
-const ITER_REG = r2;
+#define ITER_COUNT = 10;
+#define ITER_REG = r2;
 
 end:
   Jmp -> end;
 
 main:
   Mov::i8 ITER_COUNT -> ITER_REG;
-  
+
   Mov::i8 1 -> r0;
   Mov r0 -> r1;
 
@@ -15,7 +15,7 @@ main:
 
 fibonacci_loop:
   Add::Self r0, r1;
-  
+
   Dec::Self ITER_REG;
 
   Jmp::Neq::i8 ITER_REG, 0 -> fibonacci_loop;

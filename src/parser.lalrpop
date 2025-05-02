@@ -1,53 +1,105 @@
 use crate::token::*;
-use either::Either::*;
+use either::Either;
 
 grammar;
 
-SemiColon = {
-  ";"
+ImmFlag: ImmFlag = {
+  r"(?i)::i64" => ImmFlag::SingleImmediate(Width::W64),
+  r"(?i)::i32" => ImmFlag::SingleImmediate(Width::W32),
+  r"(?i)::i16" => ImmFlag::SingleImmediate(Width::W16),
+  r"(?i)::i8" => ImmFlag::SingleImmediate(Width::W8),
+
+  r"(?i)::n64" => ImmFlag::DoubleImmediate(Width::W64),
+  r"(?i)::n32" => ImmFlag::DoubleImmediate(Width::W32),
+  r"(?i)::n16" => ImmFlag::DoubleImmediate(Width::W16),
+  r"(?i)::n8" => ImmFlag::DoubleImmediate(Width::W8),
 }
 
-Arrow = {
-  "->"
+OpCode: OpCode = {
+  r"(?i)mov" => OpCode::Mov(ImmFlag::NoImmediate),
+  r"(?i)mov" <flag:ImmFlag> => OpCode::Mov(flag),
+  r"(?i)jmp::eq" => OpCode::JmpEq(ImmFlag::NoImmediate),
+  r"(?i)jmp::eq" <flag:ImmFlag> => OpCode::JmpEq(flag),
 }
 
-Comma = {
-  ","
+Register: Register = {
+  r"(?i)r0" => Register::R0,
+  r"(?i)r1" => Register::R1,
+  r"(?i)r2" => Register::R2,
+  r"(?i)r3" => Register::R3,
+  r"(?i)r4" => Register::R4,
+  r"(?i)r5" => Register::R5,
+  r"(?i)r6" => Register::R6,
+  r"(?i)r7" => Register::R7,
+  r"(?i)r8" => Register::R8,
+  r"(?i)r9" => Register::R9,
+  r"(?i)r10" => Register::R10,
+  r"(?i)r11" => Register::R11,
+  r"(?i)r12" => Register::R12,
+  r"(?i)r13" => Register::R13,
+  r"(?i)r14" => Register::R14,
+  r"(?i)r15" => Register::R15,
 }
 
-pub Opcode: Opcode = {
-  r"mov" => Opcode::Mov,
+IntLiteral: IntLiteral = {
+  r"(?i)0x[0-9A-F]+" => IntLiteral::from(isize::from_str_radix(<>.trim_start_matches("0x").trim_start_matches("0X"), 16).unwrap()),
+  r"(?i)0b[0-1]+" => IntLiteral::from(isize::from_str_radix(<>.trim_start_matches("0b").trim_start_matches("0B"), 2).unwrap()),
+  r"(?i)[0-9]+" => IntLiteral::from(isize::from_str_radix(<>, 10).unwrap()),
 }
 
-pub Register: Register = {
-  r"[rR]0" => Register::R0,
-  r"[rR]1" => Register::R1,
-}
-
-pub IntLiteral: IntLiteral = {
-  r"[0-9]+" => IntLiteral::from(usize::from_str_radix(<>, 10).unwrap())
-}
-
-
-pub Op: Op = {
-  <opcode:Opcode> <in_reg_left:Register> Comma <in_reg_right:Register> Arrow <out_reg:Register> SemiColon => {
-    Op {
-      opcode: opcode,
-      offset: 0,
-      mem_flag: MemFlag::No,
-      self_flag: SelfFlag::No,
-      imm_flag: ImmFlag {
-        arg1: false,
-        arg2: false,
-        out: false,
-      },
-      width_flag: WidthFlag::One,
-      arg1: Some(Right(in_reg_left)),
-      arg2: Some(Right(in_reg_right)),
-      out_reg: Some(Right(out_reg)),
+Label: Label = {
+  r"(?i)[a-z0-9_\-]+@" => Label { name: <>.trim_end_matches(":").to_string(), replace_with: "0".to_string() },
+  r"(?i)#define" <name:r"<(?i)[a-z0-9_\-]+>"> <replacement:r"<(?i)[a-z0-9_\-]+>"> => {
+     Label {
+      name: name.trim_start_matches("<").trim_end_matches(">").to_string(),
+      replace_with: replacement.trim_start_matches("<").trim_end_matches(">").to_string()
     }
   }
 }
 
+ArgIn: Option<Either<Register, IntLiteral>> = {
+  Register => Some(Either::Left(<>)),
+  IntLiteral => Some(Either::Right(<>)),
+}
 
+ArgOut: Option<Register> = {
+  Register => Some(<>)
+}
 
+pub Line: Line = {
+  <opcode:OpCode> <arg_left:ArgIn> "," <arg_right:ArgIn> "->" <arg_out:ArgOut> => {
+    Line {
+      opcode: opcode,
+      arg_left: arg_left,
+      arg_right: arg_right,
+      arg_out: arg_out,
+    }
+  },
+
+  <opcode:OpCode> <arg_left:ArgIn> "->" <arg_out:ArgOut> => {
+    Line {
+      opcode: opcode,
+      arg_left: arg_left,
+      arg_right: None,
+      arg_out: arg_out,
+    }
+  },
+
+  <opcode:OpCode> "->" <arg_out:ArgOut> => {
+    Line {
+      opcode: opcode,
+      arg_left: None,
+      arg_right: None,
+      arg_out: arg_out,
+    }
+  },
+
+  <opcode:OpCode> => {
+    Line {
+      opcode: opcode,
+      arg_left: None,
+      arg_right: None,
+      arg_out: None,
+    }
+  },
+}
