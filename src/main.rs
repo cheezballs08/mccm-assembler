@@ -1,13 +1,13 @@
-#![allow(dead_code)]
+#![allow(unused)]
+use either_n::*;
 use lalrpop_util::lalrpop_mod;
+use token::*;
 
 mod token;
 lalrpop_mod!( parser);
 
 use std::path::PathBuf;
 use clap::Parser;
-
-
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -24,13 +24,10 @@ fn main() {
 
   let lines = file.lines();
 
-  let line_parser = parser::LineParser::new();
+  let label_parser = parser::LabelParser::new();
+  let line_parser = parser::InstructionParser::new();
 
-  let mut parsed_lines = Vec::new();
+  let mut labels: Vec<Label> = Vec::new();
 
-  for line in lines {
-    parsed_lines.push(line_parser.parse(line));
-  }
-
-  println!("{:#?}", parsed_lines)
+  let mut instructions: Vec<Instruction> = Vec::new();
 }

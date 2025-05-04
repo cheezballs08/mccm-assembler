@@ -1,7 +1,7 @@
 use crate::token::*;
-use either::Either;
+use either_n::*;
 
-grammar;
+grammar();
 
 ImmFlag: ImmFlag = {
   r"(?i)::i64" => ImmFlag::SingleImmediate(Width::W64),
@@ -47,28 +47,34 @@ IntLiteral: IntLiteral = {
   r"(?i)[0-9]+" => IntLiteral::from(isize::from_str_radix(<>, 10).unwrap()),
 }
 
-Label: Label = {
-  r"(?i)[a-z0-9_\-]+@" => Label { name: <>.trim_end_matches(":").to_string(), replace_with: "0".to_string() },
+Constant: Constant = {
+  r"@(?i)[a-z0-9_\-]+" => Constant { name: <>.to_string() }
+}
+
+pub Label: Label = {
+  r"(?i)[a-z0-9_\-]+@" => Label { name: <>.trim_end_matches("@").to_string(), replace_with: "0".to_string() },
   r"(?i)#define" <name:r"<(?i)[a-z0-9_\-]+>"> <replacement:r"<(?i)[a-z0-9_\-]+>"> => {
-     Label {
+    Label {
       name: name.trim_start_matches("<").trim_end_matches(">").to_string(),
       replace_with: replacement.trim_start_matches("<").trim_end_matches(">").to_string()
     }
+
   }
 }
 
-ArgIn: Option<Either<Register, IntLiteral>> = {
-  Register => Some(Either::Left(<>)),
-  IntLiteral => Some(Either::Right(<>)),
+ArgIn: Option<Either3<Constant, Register, IntLiteral>> = {
+  Register => Some(Either3::Two(<>)),
+  IntLiteral => Some(Either3::One(<>)),
+  Constant => Some(Either3::Three(<>))
 }
 
 ArgOut: Option<Register> = {
   Register => Some(<>)
 }
 
-pub Line: Line = {
+pub Instruction: Instruction = {
   <opcode:OpCode> <arg_left:ArgIn> "," <arg_right:ArgIn> "->" <arg_out:ArgOut> => {
-    Line {
+    Instruction {
       opcode: opcode,
       arg_left: arg_left,
       arg_right: arg_right,
@@ -77,7 +83,7 @@ pub Line: Line = {
   },
 
   <opcode:OpCode> <arg_left:ArgIn> "->" <arg_out:ArgOut> => {
-    Line {
+    Instruction {
       opcode: opcode,
       arg_left: arg_left,
       arg_right: None,
@@ -86,7 +92,7 @@ pub Line: Line = {
   },
 
   <opcode:OpCode> "->" <arg_out:ArgOut> => {
-    Line {
+    Instruction {
       opcode: opcode,
       arg_left: None,
       arg_right: None,
@@ -95,7 +101,7 @@ pub Line: Line = {
   },
 
   <opcode:OpCode> => {
-    Line {
+    Instruction {
       opcode: opcode,
       arg_left: None,
       arg_right: None,

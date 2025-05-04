@@ -10,4 +10,4 @@ lalrpop = "0.22.1"
 lalrpop-util = { version = "0.22.1", features = ["lexer", "unicode"] }
 clap = { version = "4.5.37", features = ["derive"] }
 bitfield = "0.19.0"
-either = "1.15.0"
+either_n = "0.2.0"

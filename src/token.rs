@@ -1,10 +1,10 @@
-use either::Either;
+use either_n::*;
 
 pub trait MachineEncodable {
   fn encode(&self) -> Vec<u8>;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Width {
   W64,
   W32,
@@ -23,7 +23,7 @@ impl MachineEncodable for Width {
   }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ImmFlag {
   NoImmediate,
   SingleImmediate(Width),
@@ -40,7 +40,7 @@ impl MachineEncodable for ImmFlag {
   }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum OpCode {
   Mov(ImmFlag),
   JmpEq(ImmFlag),
@@ -91,7 +91,7 @@ impl MachineEncodable for OpCode {
   }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Register {
   R0,
   R1,
@@ -134,7 +134,7 @@ impl MachineEncodable for Register {
   }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct IntLiteral {
   value: isize,
 }
@@ -152,21 +152,26 @@ impl MachineEncodable for IntLiteral {
   }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
+pub struct Constant {
+  pub name: String,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct Label {
   pub name: String,
   pub replace_with: String,
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Line {
+#[derive(Debug, PartialEq, Clone)]
+pub struct Instruction {
   pub opcode: OpCode,
-  pub arg_left: Option<Either<Register, IntLiteral>>,
-  pub arg_right: Option<Either<Register, IntLiteral>>,
+  pub arg_left: Option<Either3<Constant, Register, IntLiteral>>,
+  pub arg_right: Option<Either3<Constant, Register, IntLiteral>>,
   pub arg_out: Option<Register>,
 }
 
-impl MachineEncodable for Line {
+impl MachineEncodable for Instruction {
   fn encode(&self) -> Vec<u8> {
     let mut output = Vec::new();
 
@@ -175,23 +180,25 @@ impl MachineEncodable for Line {
     output.extend(opcode_bytes);
 
     match &self.arg_left {
-      Some(Either::Left(register)) => {
+      Some(Either3::One(register)) => {
         output.extend(register.encode());
       }
-      Some(Either::Right(literal)) => {
+      Some(Either3::Two(literal)) => {
         output.extend(literal.encode());
       }
       None => {}
+      _ => panic!("Should have removed all constants beforehand."),
     }
 
     match &self.arg_right {
-      Some(Either::Left(register)) => {
+      Some(Either3::One(register)) => {
         output.extend(register.encode());
       }
-      Some(Either::Right(literal)) => {
+      Some(Either3::Two(literal)) => {
         output.extend(literal.encode());
       }
       None => {}
+      _ => panic!("Should have removed all constants beforehand."),
     }
 
     match &self.arg_out {
