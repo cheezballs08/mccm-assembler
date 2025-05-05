@@ -180,22 +180,22 @@ impl MachineEncodable for Instruction {
     output.extend(opcode_bytes);
 
     match &self.arg_left {
-      Some(Either3::One(register)) => {
-        output.extend(register.encode());
+      Some(Either3::One(int_literal)) => {
+        output.extend(int_literal.encode());
       }
-      Some(Either3::Two(literal)) => {
-        output.extend(literal.encode());
+      Some(Either3::Two(register)) => {
+        output.extend(register.encode());
       }
       None => {}
       _ => panic!("Should have removed all constants beforehand."),
     }
 
     match &self.arg_right {
-      Some(Either3::One(register)) => {
-        output.extend(register.encode());
+      Some(Either3::One(int_literal)) => {
+        output.extend(int_literal.encode());
       }
-      Some(Either3::Two(literal)) => {
-        output.extend(literal.encode());
+      Some(Either3::Two(register)) => {
+        output.extend(register.encode());
       }
       None => {}
       _ => panic!("Should have removed all constants beforehand."),
