@@ -1,3 +1,5 @@
+use core::panic;
+
 use either_n::*;
 
 pub trait MachineEncodable {
@@ -43,7 +45,38 @@ impl MachineEncodable for ImmFlag {
 #[derive(Debug, PartialEq, Clone)]
 pub enum OpCode {
   Mov(ImmFlag),
+  Ret,
+  Call(ImmFlag),
+
+  Not(ImmFlag),
+  And(ImmFlag),
+  Nand(ImmFlag),
+  Or(ImmFlag),
+  Nor(ImmFlag),
+  Xor(ImmFlag),
+  Xnor(ImmFlag),
+
+  Shl(ImmFlag),
+  Shr(ImmFlag),
+  Rol(ImmFlag),
+  Ror(ImmFlag),
+
+  Neg(ImmFlag),
+  Inc(ImmFlag),
+  Dec(ImmFlag),
+  Add(ImmFlag),
+  Sub(ImmFlag),
+  Mul(ImmFlag),
+  Div(ImmFlag),
+  Mod(ImmFlag),
+
+  Jmp,
   JmpEq(ImmFlag),
+  JmpNeq(ImmFlag),
+  JmpGt(ImmFlag),
+  JmpGte(ImmFlag),
+  JmpLt(ImmFlag),
+  JmpLte(ImmFlag),
 }
 
 impl MachineEncodable for OpCode {
@@ -69,25 +102,69 @@ impl MachineEncodable for OpCode {
             // Mov only has a single input argument, so we need to report the error.
             ImmFlag::DoubleImmediate(_) => panic!("Opcode (Mov) cannot have a double immediate"),
           }
-          OpCode::JmpEq(imm_flag) => match imm_flag {
-            ImmFlag::NoImmediate => vec![0x00, 0x00, 0x00],
-
-            ImmFlag::SingleImmediate(width) => match width {
-              Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
-            },
-
-            ImmFlag::DoubleImmediate(width) => match width{
-              Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
-            },
-
+        OpCode::Ret => vec![0x00, 0x00, 0x00],
+        OpCode::Call(imm_flag) => match imm_flag {
+            ImmFlag::NoImmediate => todo!(),
+            ImmFlag::SingleImmediate(width) => todo!(),
+            ImmFlag::DoubleImmediate(width) => todo!(),
           }
-        }
+        OpCode::Not(imm_flag) => match imm_flag {
+            ImmFlag::NoImmediate => vec![0x00, 0x00, 0x00],
+            ImmFlag::SingleImmediate(width) => {
+              match width {
+                Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
+                Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
+                Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
+                Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              }
+            }
+            ImmFlag::DoubleImmediate(width) => panic!("Opcode (Not) cannot have a double immediate"),
+          }
+        OpCode::And(imm_flag) => match imm_flag {
+            ImmFlag::NoImmediate => vec![0x00, 0x00, 0x00],
+            ImmFlag::SingleImmediate(width) => {
+              match width {
+                Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
+                Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
+                Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
+                Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              }
+            }
+            ImmFlag::DoubleImmediate(width) => {
+              match width {
+                Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
+                Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
+                Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
+                Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
+              }
+            }
+          }
+
+        OpCode::Nand(imm_flag) => todo!(),
+        OpCode::Or(imm_flag) => todo!(),
+        OpCode::Nor(imm_flag) => todo!(),
+        OpCode::Xor(imm_flag) => todo!(),
+        OpCode::Xnor(imm_flag) => todo!(),
+        OpCode::Shl(imm_flag) => todo!(),
+        OpCode::Shr(imm_flag) => todo!(),
+        OpCode::Rol(imm_flag) => todo!(),
+        OpCode::Ror(imm_flag) => todo!(),
+        OpCode::Neg(imm_flag) => todo!(),
+        OpCode::Inc(imm_flag) => todo!(),
+        OpCode::Dec(imm_flag) => todo!(),
+        OpCode::Add(imm_flag) => todo!(),
+        OpCode::Sub(imm_flag) => todo!(),
+        OpCode::Mul(imm_flag) => todo!(),
+        OpCode::Div(imm_flag) => todo!(),
+        OpCode::Mod(imm_flag) => todo!(),
+        OpCode::Jmp => todo!(),
+        OpCode::JmpEq(imm_flag) => todo!(),
+        OpCode::JmpNeq(imm_flag) => todo!(),
+        OpCode::JmpGt(imm_flag) => todo!(),
+        OpCode::JmpGte(imm_flag) => todo!(),
+        OpCode::JmpLt(imm_flag) => todo!(),
+        OpCode::JmpLte(imm_flag) => todo!(),
+  }
   }
 }
 
@@ -168,7 +245,7 @@ pub struct Instruction {
   pub opcode: OpCode,
   pub arg_left: Option<Either3<Constant, Register, IntLiteral>>,
   pub arg_right: Option<Either3<Constant, Register, IntLiteral>>,
-  pub arg_out: Option<Register>,
+  pub arg_out: Option<Either2<Constant, Register>>,
 }
 
 impl MachineEncodable for Instruction {
@@ -202,8 +279,11 @@ impl MachineEncodable for Instruction {
     }
 
     match &self.arg_out {
-      Some(register) => {
+      Some(Either2::One(register)) => {
         output.extend(register.encode());
+      }
+      Some(Either2::Two(constant)) => {
+        panic!("Should have removed all constants beforehand.")
       }
       None => {}
     }

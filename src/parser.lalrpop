@@ -1,7 +1,7 @@
 use crate::token::*;
 use either_n::*;
 
-grammar();
+grammar(line_number: usize);
 
 ImmFlag: ImmFlag = {
   r"(?i)::i64" => ImmFlag::SingleImmediate(Width::W64),
@@ -16,10 +16,90 @@ ImmFlag: ImmFlag = {
 }
 
 OpCode: OpCode = {
-  r"(?i)mov" => OpCode::Mov(ImmFlag::NoImmediate),
-  r"(?i)mov" <flag:ImmFlag> => OpCode::Mov(flag),
-  r"(?i)jmp::eq" => OpCode::JmpEq(ImmFlag::NoImmediate),
-  r"(?i)jmp::eq" <flag:ImmFlag> => OpCode::JmpEq(flag),
+  r"(?i)Mov" => OpCode::Mov(ImmFlag::NoImmediate),
+  r"(?i)Mov" <flag:ImmFlag> => OpCode::Mov(flag),
+
+  r"(?i)Ret" => OpCode::Ret,
+
+  r"(?i)Call" => OpCode::Call(ImmFlag::NoImmediate),
+  r"(?i)Call" <flag:ImmFlag> => OpCode::Call(flag),
+
+  r"(?i)Not" => OpCode::Not(ImmFlag::NoImmediate),
+  r"(?i)Not" <flag:ImmFlag> => OpCode::Not(flag),
+
+  r"(?i)And" => OpCode::And(ImmFlag::NoImmediate),
+  r"(?i)And" <flag:ImmFlag> => OpCode::And(flag),
+
+  r"(?i)Nand" => OpCode::Nand(ImmFlag::NoImmediate),
+  r"(?i)Nand" <flag:ImmFlag> => OpCode::Nand(flag),
+
+  r"(?i)Or" => OpCode::Or(ImmFlag::NoImmediate),
+  r"(?i)Or" <flag:ImmFlag> => OpCode::Or(flag),
+
+  r"(?i)Nor" => OpCode::Nor(ImmFlag::NoImmediate),
+  r"(?i)Nor" <flag:ImmFlag> => OpCode::Nor(flag),
+
+  r"(?i)Xor" => OpCode::Xor(ImmFlag::NoImmediate),
+  r"(?i)Xor" <flag:ImmFlag> => OpCode::Xor(flag),
+
+  r"(?i)Xnor" => OpCode::Xnor(ImmFlag::NoImmediate),
+  r"(?i)Xnor" <flag:ImmFlag> => OpCode::Xnor(flag),
+
+  r"(?i)Shl" => OpCode::Shl(ImmFlag::NoImmediate),
+  r"(?i)Shl" <flag:ImmFlag> => OpCode::Shl(flag),
+
+  r"(?i)Shr" => OpCode::Shr(ImmFlag::NoImmediate),
+  r"(?i)Shr" <flag:ImmFlag> => OpCode::Shr(flag),
+
+  r"(?i)Rol" => OpCode::Rol(ImmFlag::NoImmediate),
+  r"(?i)Rol" <flag:ImmFlag> => OpCode::Rol(flag),
+
+  r"(?i)Ror" => OpCode::Ror(ImmFlag::NoImmediate),
+  r"(?i)Ror" <flag:ImmFlag> => OpCode::Ror(flag),
+
+  r"(?i)Neg" => OpCode::Neg(ImmFlag::NoImmediate),
+  r"(?i)Neg" <flag:ImmFlag> => OpCode::Neg(flag),
+
+  r"(?i)Inc" => OpCode::Inc(ImmFlag::NoImmediate),
+  r"(?i)Inc" <flag:ImmFlag> => OpCode::Inc(flag),
+
+  r"(?i)Dec" => OpCode::Dec(ImmFlag::NoImmediate),
+  r"(?i)Dec" <flag:ImmFlag> => OpCode::Dec(flag),
+
+  r"(?i)Add" => OpCode::Add(ImmFlag::NoImmediate),
+  r"(?i)Add" <flag:ImmFlag> => OpCode::Add(flag),
+
+  r"(?i)Sub" => OpCode::Sub(ImmFlag::NoImmediate),
+  r"(?i)Sub" <flag:ImmFlag> => OpCode::Sub(flag),
+
+  r"(?i)Mul" => OpCode::Mul(ImmFlag::NoImmediate),
+  r"(?i)Mul" <flag:ImmFlag> => OpCode::Mul(flag),
+
+  r"(?i)Div" => OpCode::Div(ImmFlag::NoImmediate),
+  r"(?i)Div" <flag:ImmFlag> => OpCode::Div(flag),
+
+  r"(?i)Mod" => OpCode::Mod(ImmFlag::NoImmediate),
+  r"(?i)Mod" <flag:ImmFlag> => OpCode::Mod(flag),
+
+  r"(?i)Jmp" => OpCode::Jmp,
+
+  r"(?i)Jmp::Eq" => OpCode::JmpEq(ImmFlag::NoImmediate),
+  r"(?i)Jmp::Eq" <flag:ImmFlag> => OpCode::JmpEq(flag),
+
+  r"(?i)Jmp::Neq" => OpCode::JmpNeq(ImmFlag::NoImmediate),
+  r"(?i)Jmp::Neq" <flag:ImmFlag> => OpCode::JmpNeq(flag),
+
+  r"(?i)Jmp::Gt" => OpCode::JmpGt(ImmFlag::NoImmediate),
+  r"(?i)Jmp::Gt" <flag:ImmFlag> => OpCode::JmpGt(flag),
+
+  r"(?i)Jmp::Gte" => OpCode::JmpGte(ImmFlag::NoImmediate),
+  r"(?i)Jmp::Gte" <flag:ImmFlag> => OpCode::JmpGte(flag),
+
+  r"(?i)Jmp::Lt" => OpCode::JmpLt(ImmFlag::NoImmediate),
+  r"(?i)Jmp::Lt" <flag:ImmFlag> => OpCode::JmpLt(flag),
+
+  r"(?i)Jmp::Lte" => OpCode::JmpLte(ImmFlag::NoImmediate),
+  r"(?i)Jmp::Lte" <flag:ImmFlag> => OpCode::JmpLte(flag),
 }
 
 Register: Register = {
@@ -48,28 +128,28 @@ IntLiteral: IntLiteral = {
 }
 
 Constant: Constant = {
-  r"@(?i)[a-z0-9_\-]+" => Constant { name: <>.to_string() }
+  r"@(?i)[a-z0-9_\-]+" => Constant { name: <>.trim_start_matches("@").to_string() }
 }
 
 pub Label: Label = {
-  r"(?i)[a-z0-9_\-]+@" => Label { name: <>.trim_end_matches("@").to_string(), replace_with: "0".to_string() },
+  r"(?i)[a-z0-9_\-]+@" => Label { name: <>.trim_end_matches("@").to_string(), replace_with: line_number.to_string() },
   r"(?i)#define" <name:r"<(?i)[a-z0-9_\-]+>"> <replacement:r"<(?i)[a-z0-9_\-]+>"> => {
     Label {
       name: name.trim_start_matches("<").trim_end_matches(">").to_string(),
       replace_with: replacement.trim_start_matches("<").trim_end_matches(">").to_string()
     }
-
   }
 }
 
 ArgIn: Option<Either3<Constant, Register, IntLiteral>> = {
-  Register => Some(Either3::Two(<>)),
   IntLiteral => Some(Either3::One(<>)),
+  Register => Some(Either3::Two(<>)),
   Constant => Some(Either3::Three(<>))
 }
 
-ArgOut: Option<Register> = {
-  Register => Some(<>)
+ArgOut: Option<Either2<Constant, Register>> = {
+  Register => Some(Either2::One(<>)),
+  Constant => Some(Either2::Two(<>))
 }
 
 pub Instruction: Instruction = {

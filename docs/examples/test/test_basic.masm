@@ -1,0 +1,18 @@
+#define <LOOP_COUNT> <10>
+
+end_loop@
+  Jmp -> @end_loop
+
+main@
+  Mov::i8 0x01 -> r0
+  Mov::i8 @LOOP_COUNT -> r1
+
+  Jmp -> @fib_loop
+
+fib_loop@
+  Add r0, r1 -> r0
+
+  Dec r1 -> r1
+
+  Jmp::Eq::i8 r1, 0x00 -> @end_loop
+  Jmp -> @fib_loop
