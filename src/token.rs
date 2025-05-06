@@ -1,4 +1,5 @@
 use core::panic;
+use std::vec;
 
 use either_n::*;
 
@@ -82,89 +83,36 @@ pub enum OpCode {
 impl MachineEncodable for OpCode {
   fn encode(&self) -> Vec<u8> {
     match self {
-        OpCode::Mov(imm_flag) => match imm_flag {
-
-            // Opcode Bit field is [Opcode, CounterOffset, Flags]
-
-            // For no immediate, the arguments are [Register(W8) -> Register(W8)], which makes the output 3 + 2 = 5 bytes.
-            ImmFlag::NoImmediate => vec![0x00, 0x00, 0x00],
-
-            // For single immediate, the arguments are:
-            // [Immediate(IntLiteral) -> Register(W8)]
-            // So 3 + Width bytes, which we need to match for.
-            ImmFlag::SingleImmediate(width) => match width {
-              Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
-            },
-
-            // Mov only has a single input argument, so we need to report the error.
-            ImmFlag::DoubleImmediate(_) => panic!("Opcode (Mov) cannot have a double immediate"),
-          }
-        OpCode::Ret => vec![0x00, 0x00, 0x00],
-        OpCode::Call(imm_flag) => match imm_flag {
-            ImmFlag::NoImmediate => todo!(),
-            ImmFlag::SingleImmediate(width) => todo!(),
-            ImmFlag::DoubleImmediate(width) => todo!(),
-          }
-        OpCode::Not(imm_flag) => match imm_flag {
-            ImmFlag::NoImmediate => vec![0x00, 0x00, 0x00],
-            ImmFlag::SingleImmediate(width) => {
-              match width {
-                Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
-                Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
-                Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
-                Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              }
-            }
-            ImmFlag::DoubleImmediate(width) => panic!("Opcode (Not) cannot have a double immediate"),
-          }
-        OpCode::And(imm_flag) => match imm_flag {
-            ImmFlag::NoImmediate => vec![0x00, 0x00, 0x00],
-            ImmFlag::SingleImmediate(width) => {
-              match width {
-                Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
-                Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
-                Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
-                Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              }
-            }
-            ImmFlag::DoubleImmediate(width) => {
-              match width {
-                Width::W64 => vec![0x00, 0x00, imm_flag.encode()[0]],
-                Width::W32 => vec![0x00, 0x00, imm_flag.encode()[0]],
-                Width::W16 => vec![0x00, 0x00, imm_flag.encode()[0]],
-                Width::W8 => vec![0x00, 0x00, imm_flag.encode()[0]],
-              }
-            }
-          }
-
-        OpCode::Nand(imm_flag) => todo!(),
-        OpCode::Or(imm_flag) => todo!(),
-        OpCode::Nor(imm_flag) => todo!(),
-        OpCode::Xor(imm_flag) => todo!(),
-        OpCode::Xnor(imm_flag) => todo!(),
-        OpCode::Shl(imm_flag) => todo!(),
-        OpCode::Shr(imm_flag) => todo!(),
-        OpCode::Rol(imm_flag) => todo!(),
-        OpCode::Ror(imm_flag) => todo!(),
-        OpCode::Neg(imm_flag) => todo!(),
-        OpCode::Inc(imm_flag) => todo!(),
-        OpCode::Dec(imm_flag) => todo!(),
-        OpCode::Add(imm_flag) => todo!(),
-        OpCode::Sub(imm_flag) => todo!(),
-        OpCode::Mul(imm_flag) => todo!(),
-        OpCode::Div(imm_flag) => todo!(),
-        OpCode::Mod(imm_flag) => todo!(),
-        OpCode::Jmp => todo!(),
-        OpCode::JmpEq(imm_flag) => todo!(),
-        OpCode::JmpNeq(imm_flag) => todo!(),
-        OpCode::JmpGt(imm_flag) => todo!(),
-        OpCode::JmpGte(imm_flag) => todo!(),
-        OpCode::JmpLt(imm_flag) => todo!(),
-        OpCode::JmpLte(imm_flag) => todo!(),
-  }
+      OpCode::Mov(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Ret => vec![0x00, 0x00],
+      OpCode::Call(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Not(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::And(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Nand(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Or(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Nor(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Xor(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Xnor(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Shl(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Shr(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Rol(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Ror(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Neg(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Inc(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Dec(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Add(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Sub(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Mul(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Div(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Mod(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Jmp => vec![0x00, 0x00],
+      OpCode::JmpEq(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::JmpNeq(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::JmpGt(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::JmpGte(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::JmpLt(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::JmpLte(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+    }
   }
 }
 
