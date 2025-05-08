@@ -18,9 +18,9 @@ pub enum Width {
 impl MachineEncodable for Width {
   fn encode(&self) -> Vec<u8> {
     match self {
-      Width::W64 => vec![0b00000000],
-      Width::W32 => vec![0b00000000],
-      Width::W16 => vec![0b00000000],
+      Width::W64 => vec![0b00011000],
+      Width::W32 => vec![0b00010000],
+      Width::W16 => vec![0b00001000],
       Width::W8 => vec![0b00000000],
     }
   }
@@ -37,8 +37,8 @@ impl MachineEncodable for ImmFlag {
   fn encode(&self) -> Vec<u8> {
     match self {
       ImmFlag::NoImmediate => vec![0b00000000],
-      ImmFlag::SingleImmediate(width) => vec![0b00000000 | width.encode()[0]],
-      ImmFlag::DoubleImmediate(width) => vec![0b00000000 | width.encode()[0]],
+      ImmFlag::SingleImmediate(width) => vec![0b00000010 | width.encode()[0]],
+      ImmFlag::DoubleImmediate(width) => vec![0b00000110 | width.encode()[0]],
     }
   }
 }
@@ -84,34 +84,34 @@ impl MachineEncodable for OpCode {
   fn encode(&self) -> Vec<u8> {
     match self {
       OpCode::Mov(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Ret => vec![0x00, 0x00],
-      OpCode::Call(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Not(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::And(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Nand(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Or(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Nor(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Xor(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Xnor(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Shl(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Shr(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Rol(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Ror(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Neg(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Inc(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Dec(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Add(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Sub(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Mul(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Div(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Mod(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::Jmp => vec![0x00, 0x00],
-      OpCode::JmpEq(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::JmpNeq(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::JmpGt(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::JmpGte(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::JmpLt(imm_flag) => vec![0x00, imm_flag.encode()[0]],
-      OpCode::JmpLte(imm_flag) => vec![0x00, imm_flag.encode()[0]],
+      OpCode::Ret => vec![0x01, 0x00],
+      OpCode::Call(imm_flag) => vec![0x02, imm_flag.encode()[0]],
+      OpCode::Not(imm_flag) => vec![0x03, imm_flag.encode()[0]],
+      OpCode::And(imm_flag) => vec![0x04, imm_flag.encode()[0]],
+      OpCode::Nand(imm_flag) => vec![0x05, imm_flag.encode()[0]],
+      OpCode::Or(imm_flag) => vec![0x06, imm_flag.encode()[0]],
+      OpCode::Nor(imm_flag) => vec![0x07, imm_flag.encode()[0]],
+      OpCode::Xor(imm_flag) => vec![0x08, imm_flag.encode()[0]],
+      OpCode::Xnor(imm_flag) => vec![0x09, imm_flag.encode()[0]],
+      OpCode::Shl(imm_flag) => vec![0x0A, imm_flag.encode()[0]],
+      OpCode::Shr(imm_flag) => vec![0x0B, imm_flag.encode()[0]],
+      OpCode::Rol(imm_flag) => vec![0x0C, imm_flag.encode()[0]],
+      OpCode::Ror(imm_flag) => vec![0x0D, imm_flag.encode()[0]],
+      OpCode::Neg(imm_flag) => vec![0x0E, imm_flag.encode()[0]],
+      OpCode::Inc(imm_flag) => vec![0x0F, imm_flag.encode()[0]],
+      OpCode::Dec(imm_flag) => vec![0x10, imm_flag.encode()[0]],
+      OpCode::Add(imm_flag) => vec![0x11, imm_flag.encode()[0]],
+      OpCode::Sub(imm_flag) => vec![0x12, imm_flag.encode()[0]],
+      OpCode::Mul(imm_flag) => vec![0x13, imm_flag.encode()[0]],
+      OpCode::Div(imm_flag) => vec![0x14, imm_flag.encode()[0]],
+      OpCode::Mod(imm_flag) => vec![0x15, imm_flag.encode()[0]],
+      OpCode::Jmp => vec![0x16, 0x00],
+      OpCode::JmpEq(imm_flag) => vec![0x17, imm_flag.encode()[0]],
+      OpCode::JmpNeq(imm_flag) => vec![0x18, imm_flag.encode()[0]],
+      OpCode::JmpGt(imm_flag) => vec![0x19, imm_flag.encode()[0]],
+      OpCode::JmpGte(imm_flag) => vec![0x1A, imm_flag.encode()[0]],
+      OpCode::JmpLt(imm_flag) => vec![0x1B, imm_flag.encode()[0]],
+      OpCode::JmpLte(imm_flag) => vec![0x1C, imm_flag.encode()[0]],
     }
   }
 }
@@ -140,21 +140,21 @@ impl MachineEncodable for Register {
   fn encode(&self) -> Vec<u8> {
     match self {
       Register::R0 => vec![0x00],
-      Register::R1 => vec![0x00],
-      Register::R2 => vec![0x00],
-      Register::R3 => vec![0x00],
-      Register::R4 => vec![0x00],
-      Register::R5 => vec![0x00],
-      Register::R6 => vec![0x00],
-      Register::R7 => vec![0x00],
-      Register::R8 => vec![0x00],
-      Register::R9 => vec![0x00],
-      Register::R10 => vec![0x00],
-      Register::R11 => vec![0x00],
-      Register::R12 => vec![0x00],
-      Register::R13 => vec![0x00],
-      Register::R14 => vec![0x00],
-      Register::R15 => vec![0x00],
+      Register::R1 => vec![0x01],
+      Register::R2 => vec![0x02],
+      Register::R3 => vec![0x03],
+      Register::R4 => vec![0x04],
+      Register::R5 => vec![0x05],
+      Register::R6 => vec![0x06],
+      Register::R7 => vec![0x07],
+      Register::R8 => vec![0x08],
+      Register::R9 => vec![0x09],
+      Register::R10 => vec![0x0A],
+      Register::R11 => vec![0x0B],
+      Register::R12 => vec![0x0C],
+      Register::R13 => vec![0x0D],
+      Register::R14 => vec![0x0E],
+      Register::R15 => vec![0x0F],
     }
   }
 }
@@ -235,7 +235,6 @@ impl MachineEncodable for Instruction {
       }
       None => {}
     }
-
     output
   }
 }

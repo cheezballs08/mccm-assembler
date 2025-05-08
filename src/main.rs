@@ -4,7 +4,7 @@ use lalrpop_util::lalrpop_mod;
 use token::*;
 
 mod token;
-lalrpop_mod!( parser);
+lalrpop_mod!(parser);
 
 use std::path::PathBuf;
 use clap::Parser;
@@ -13,14 +13,17 @@ use clap::Parser;
 #[command(version)]
 struct Args {
   #[arg(short, long)]
-  filename: PathBuf
+  in_file: PathBuf,
+
+  #[arg(short, long)]
+  out_file: PathBuf,
 }
 
 
 fn main() {
   let args = Args::parse();
 
-  let file = std::fs::read_to_string(args.filename).unwrap();
+  let file = std::fs::read_to_string(args.in_file).unwrap();
 
   let lines = file.lines();
 
@@ -40,11 +43,20 @@ fn main() {
       test_lines.push(Either2::Two(label));
     }
     else if let Ok(instruction) = line_parser.parse(line_num, line) {
-      test_lines.push(Either2::One(instruction));
-      line_num += 1;
+      instructions.push(instruction);
+      line_num += 1; 
     }
   }
 
-  println!("{:#?}", test_lines);
-  println!("{:#?} things parsed.", test_lines.len());
+  let mut machine_code = Vec::new();
+  
+  
+  for instruction in &instructions {
+    machine_code.extend(instruction.encode());
+  }
+
+  let _ = std::fs::write(args.out_file, &machine_code).unwrap();
+
+  println!("{:#?}", instructions);
+  println!("{:#04X?}", machine_code);
 }
